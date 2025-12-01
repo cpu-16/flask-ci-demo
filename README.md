@@ -130,7 +130,7 @@ La API incluye **Swagger UI** para probar los endpoints de forma interactiva:
 http://localhost:5000/swagger/
 ```
 
-![Swagger UI en ejecución](docs/images/03-swagger-running.png)
+![Swagger UI en ejecución](docs/images/swagger.png)
 
 ---
 
@@ -209,7 +209,7 @@ ghcr.io/cpu-16/flask-ci-demo:main
 ghcr.io/cpu-16/flask-ci-demo:latest
 ```
 
-![Paquete publicado en GHCR](docs/images/02-ghcr-package.png)
+![Paquete publicado en GHCR](docs/images/ghcr.png)
 
 ### Configuración de permisos del token
 
@@ -227,6 +227,7 @@ Esto permite que el token automático `GITHUB_TOKEN` tenga permiso para publicar
 docker pull ghcr.io/cpu-16/flask-ci-demo:latest
 docker run --rm -p 5000:5000 ghcr.io/cpu-16/flask-ci-demo:latest
 ```
+![Ejecución del pull y run para probar la imagen](docs/images/pull.png)
 
 #### Si el paquete es privado
 
@@ -248,7 +249,7 @@ El workflow vive en: `.github/workflows/build-and-push.yml`
 - ✅ En cada `push` a la rama `main`
 - ✅ De forma manual desde la pestaña **Actions** (`workflow_dispatch`)
 
-![GitHub Actions ejecutándose correctamente](docs/images/01-actions-green.png)
+![GitHub Actions ejecutándose correctamente](docs/images/actions.png)
 
 ### Variables de entorno
 
