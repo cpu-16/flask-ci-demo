@@ -7,9 +7,7 @@
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
 ![GHCR](https://img.shields.io/badge/GHCR-Registry-181717?style=for-the-badge&logo=github&logoColor=white)
 
-**API REST en Flask con CI/CD automatizado - Aprende Docker, GHCR y GitHub Actions** 🚀
-
-[Demo en vivo](#-probar-la-imagen-localmente) · [Documentación API](#-aplicación-flask) · [Ver en GHCR](https://github.com/cpu-16/flask-ci-demo/pkgs/container/flask-ci-demo)
+**API REST en Flask con CI/CD automatizado – laboratorio para aprender Docker, GHCR y GitHub Actions** 🚀
 
 </div>
 
@@ -17,55 +15,54 @@
 
 ## 📋 Tabla de Contenidos
 
-- [Arquitectura General](#-arquitectura-general)
-- [Aplicación Flask](#-aplicación-flask)
-- [Contenerización con Docker](#-contenerización-con-docker)
-- [Publicación en GHCR](#-publicación-en-github-container-registry-ghcr)
-- [Pipeline de CI](#-pipeline-de-ci-con-github-actions)
-- [Buenas Prácticas de Seguridad](#-buenas-prácticas-de-seguridad-usadas)
-- [Próximos Pasos](#-próximos-pasos-roadmap)
+1. [¿Qué es este proyecto?](#-qué-es-este-proyecto)
+2. [Arquitectura general](#-arquitectura-general)
+3. [Requisitos previos](#-requisitos-previos)
+4. [Paso a paso del mini-lab](#-paso-a-paso-del-mini-lab)
+   - [1. Clonar el repositorio](#1-clonar-el-repositorio)
+   - [2. Crear entorno virtual y ejecutar la API en local](#2-crear-entorno-virtual-y-ejecutar-la-api-en-local)
+   - [3. Probar la API y Swagger](#3-probar-la-api-y-swagger)
+   - [4. Construir y probar la imagen Docker local](#4-construir-y-probar-la-imagen-docker-local)
+   - [5. Configurar GitHub Actions para build & push](#5-configurar-github-actions-para-build--push)
+   - [6. Verificar la imagen en GitHub Container Registry](#6-verificar-la-imagen-en-github-container-registry)
+   - [7. Probar la imagen desde otra máquina](#7-probar-la-imagen-desde-otra-máquina)
+5. [Detalles de la aplicación Flask](#-detalles-de-la-aplicación-flask)
+6. [Dockerfile y .dockerignore](#-dockerfile-y-dockerignore)
+7. [Workflow de GitHub Actions](#-workflow-de-github-actions)
+8. [Buenas prácticas de seguridad usadas](#-buenas-prácticas-de-seguridad-usadas)
+9. [Demo en video](#-demo-en-video)
+10. [Próximos pasos (Roadmap)](#-próximos-pasos-roadmap)
+11. [Contribuir](#-contribuir)
+12. [Licencia y agradecimientos](#-licencia-y-agradecimientos)
 
 ---
 
 ## 🎯 ¿Qué es este proyecto?
 
-Este proyecto es una **API REST en Flask** que expone un catálogo de productos de limpieza y sirve como laboratorio para aprender:
+Este repositorio contiene una **API REST en Flask** que expone un catálogo de productos de limpieza y se utiliza como **laboratorio DevOps/SRE** para practicar:
 
 - ✅ Contenerización con **Docker**
-- ✅ Publicar imágenes en **GitHub Container Registry (GHCR)**
-- ✅ Automatizar el build y publicación de la imagen con **GitHub Actions**
+- ✅ Publicación de imágenes en **GitHub Container Registry (GHCR)**
+- ✅ Automatización del build & push con **GitHub Actions** (pipeline de CI)
+
+La idea es que puedas seguir este README como un **mini-manual** y repetir todo el flujo en tus propios proyectos.
 
 ---
 
-## 🏗 Arquitectura General
+## 🏗 Arquitectura general
 
-### Flujo completo que implementa este repo
+### Flujo completo
 
 ```mermaid
 graph LR
-    A[Código Flask] --> B[Git Push]
+    A[Código Flask] --> B[Git Push a main]
     B --> C[GitHub Actions]
     C --> D[Build Docker Image]
-    D --> E[Push to GHCR]
-    E --> F[Pull & Run Anywhere]
+    D --> E[Push a GHCR]
+    E --> F[Docker pull & run en cualquier máquina]
 ```
 
-**Paso a paso:**
-
-1. 📝 La aplicación Flask vive en `app.py`
-2. 🐳 Se construye una imagen Docker usando `Dockerfile`
-3. 🔄 Al hacer `git push` a la rama `main`, GitHub Actions:
-   - Hace checkout del código
-   - Construye la imagen Docker
-   - La publica en **GHCR** con los tags `main` y `latest`
-4. 🚀 Desde cualquier máquina con Docker se puede ejecutar:
-
-```bash
-docker pull ghcr.io/cpu-16/flask-ci-demo:latest
-docker run --rm -p 5000:5000 ghcr.io/cpu-16/flask-ci-demo:latest
-```
-
-### Estructura del Proyecto
+### Estructura del proyecto
 
 ```
 flask-ci-demo/
@@ -73,24 +70,216 @@ flask-ci-demo/
 ├── requirements.txt                # Dependencias Python
 ├── Dockerfile                      # Instrucciones para construir la imagen
 ├── .dockerignore                   # Archivos a excluir del build
+├── .gitignore                      # Archivos a ignorar por Git
 ├── .github/
 │   └── workflows/
-│       └── build-and-push.yml     # Pipeline CI/CD
+│       └── build-and-push.yml      # Pipeline CI/CD
 ├── docs/
 │   └── images/
-│       ├── 01-actions-green.png   # Capturas del workflow
-│       ├── 02-ghcr-package.png    # Paquete en GHCR
-│       └── 03-swagger-running.png # Swagger UI en ejecución
+│       ├── swagger.png             # Captura de Swagger UI
+│       ├── actions.png             # Captura del workflow
+│       ├── ghcr.png                # Paquete en GHCR
+│       ├── pull.png                # Pull y run de la imagen
+│       └── demo.mp4                # Video de demostración
 └── README.md                       # Esta documentación
 ```
 
 ---
 
-## 🐍 Aplicación Flask
+## 🧰 Requisitos previos
+
+Para seguir el laboratorio necesitas:
+
+- Git instalado
+- Python 3.11+
+- Docker instalado (en la máquina donde construirás/probarás la imagen)
+- Cuenta de GitHub
+
+**Opcional:**
+
+- WSL2 en Windows (este lab se probó con Ubuntu en WSL)
+- Otra máquina Linux con Docker para probar el `docker pull` desde GHCR
+
+---
+
+## 🧪 Paso a paso del mini-lab
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/cpu-16/flask-ci-demo.git
+cd flask-ci-demo
+```
+
+### 2. Crear entorno virtual y ejecutar la API en local
+
+#### 2.1 Crear y activar entorno virtual
+
+```bash
+python3 -m venv venv
+source venv/bin/activate   # En Linux/WSL
+
+# En Windows PowerShell sería:
+# .\venv\Scripts\Activate.ps1
+```
+
+#### 2.2 Instalar dependencias
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+#### 2.3 Ejecutar la aplicación Flask
+
+```bash
+python app.py
+```
+
+Verás algo similar en consola:
+
+```
+ * Serving Flask app 'app'
+ * Debug mode: on
+ * Running on http://127.0.0.1:5000
+ * Running on http://0.0.0.0:5000
+```
+
+### 3. Probar la API y Swagger
+
+Con la aplicación corriendo:
+
+- **Información básica de la API**
+  👉 http://localhost:5000/
+
+- **Documentación interactiva (Swagger UI)**
+  👉 http://localhost:5000/swagger/
+
+- **Lista de productos**
+  👉 http://localhost:5000/catalogos/productos
+
+**Captura de ejemplo:**
+
+![Swagger UI en ejecución](docs/images/swagger.png)
+
+### 4. Construir y probar la imagen Docker local
+
+> **Nota:** Este paso se hace en la máquina donde tienes Docker instalado (puede ser la misma o una VM con Docker).
+
+#### 4.1 Build local de la imagen
+
+Desde la raíz del proyecto:
+
+```bash
+docker build -t flask-ci-demo:dev .
+```
+
+#### 4.2 Ejecutar el contenedor
+
+```bash
+docker run --rm -p 5000:5000 flask-ci-demo:dev
+```
+
+Prueba de nuevo en el navegador:
+
+- http://localhost:5000/
+- http://localhost:5000/swagger/
+
+Si lo ves igual que en la ejecución "normal", la imagen está bien construida.
+
+### 5. Configurar GitHub Actions para build & push
+
+Este repo ya incluye el workflow en:
+
+```
+.github/workflows/build-and-push.yml
+```
+
+El flujo está configurado para:
+
+- Ejecutarse automáticamente en cada push a la rama `main`.
+- Construir la imagen Docker.
+- Publicarla en GitHub Container Registry (GHCR) con los tags:
+  - `main`
+  - `latest`
+
+#### 5.1 Ver el workflow en GitHub
+
+1. Ve al repositorio en GitHub.
+2. Abre la pestaña **Actions**.
+3. Verás el workflow "Build and Publish Docker Image".
+4. Cada push a `main` dispara una nueva ejecución.
+5. También puedes lanzarlo manualmente si lo habilitas con `workflow_dispatch`.
+
+![GitHub Actions ejecutándose correctamente](docs/images/actions.png)
+
+### 6. Verificar la imagen en GitHub Container Registry
+
+GitHub crea un paquete de contenedor asociado al repo.
+
+**Pasos:**
+
+1. En GitHub, entra al repo `flask-ci-demo`.
+2. Ve a la pestaña **Packages** (o en el panel lateral).
+3. Deberías ver el paquete `flask-ci-demo`.
+4. Dentro verás las tags publicadas, por ejemplo:
+   - `ghcr.io/cpu-16/flask-ci-demo:main`
+   - `ghcr.io/cpu-16/flask-ci-demo:latest`
+
+Desde esa página también tienes el comando sugerido para hacer `docker pull`.
+
+![Paquete publicado en GHCR](docs/images/ghcr.png)
+
+### 7. Probar la imagen desde otra máquina
+
+En una segunda máquina con Docker (por ejemplo tu servidor de laboratorio):
+
+#### 7.1 Descargar la imagen
+
+Si el paquete es público:
+
+```bash
+docker pull ghcr.io/cpu-16/flask-ci-demo:latest
+```
+
+Si solo tienes la tag `main`, usa:
+
+```bash
+docker pull ghcr.io/cpu-16/flask-ci-demo:main
+```
+
+#### 7.2 Ejecutar el contenedor
+
+Con la tag `latest`:
+
+```bash
+docker run --rm -p 5000:5000 ghcr.io/cpu-16/flask-ci-demo:latest
+```
+
+o con la tag `main`:
+
+```bash
+docker run --rm -p 5000:5000 ghcr.io/cpu-16/flask-ci-demo:main
+```
+
+Vuelve a probar en el navegador (desde el cliente que tenga acceso a esa máquina):
+
+- http://IP_DEL_SERVIDOR:5000/
+- http://IP_DEL_SERVIDOR:5000/swagger/
+
+Si todo está bien, has recorrido el flujo completo:
+
+**Código Flask → Git push → GitHub Actions → GHCR → otra máquina con Docker ejecutando la API.**
+
+![Ejecución del pull y run para probar la imagen](docs/images/pull.png)
+
+---
+
+## 🐍 Detalles de la aplicación Flask
 
 El archivo principal es `app.py`.
 
-### Endpoints disponibles
+### Endpoints principales
 
 #### 🏠 Ruta raíz
 
@@ -98,9 +287,7 @@ El archivo principal es `app.py`.
 GET /
 ```
 
-Devuelve un JSON con información básica de la API.
-
-**Respuesta:**
+**Respuesta de ejemplo:**
 
 ```json
 {
@@ -120,33 +307,13 @@ Devuelve un JSON con información básica de la API.
 |--------|------|-------------|
 | `GET` | `/catalogos/categorias` | Lista todas las categorías disponibles |
 | `GET` | `/catalogos/productos` | Lista todos los productos del catálogo |
-| `GET` | `/catalogos/productos/{id}` | Devuelve un producto específico por ID |
-
-### 📖 Documentación Interactiva
-
-La API incluye **Swagger UI** para probar los endpoints de forma interactiva:
-
-```
-http://localhost:5000/swagger/
-```
-
-![Swagger UI en ejecución](docs/images/swagger.png)
+| `GET` | `/catalogos/productos/{id}` | Devuelve un producto específico por id |
 
 ---
 
-## 🐳 Contenerización con Docker
+## 🐳 Dockerfile y .dockerignore
 
 ### Dockerfile
-
-El proyecto incluye un `Dockerfile` basado en `python:3.11-slim` que:
-
-1. ✅ Crea el directorio de trabajo `/app`
-2. ✅ Copia `requirements.txt` e instala dependencias
-3. ✅ Copia el resto del código
-4. ✅ Expone el puerto `5000`
-5. ✅ Ejecuta la aplicación con `python app.py`
-
-**Dockerfile:**
 
 ```dockerfile
 FROM python:3.11-slim
@@ -165,8 +332,6 @@ CMD ["python", "app.py"]
 
 ### .dockerignore
 
-El archivo `.dockerignore` excluye archivos innecesarios del build:
-
 ```
 venv/
 __pycache__/
@@ -176,84 +341,30 @@ __pycache__/
 .env
 ```
 
-Esto hace que:
-- 🚀 El build sea más rápido
-- 📦 La imagen resultante sea más limpia y segura
+Beneficios:
 
-### 🧪 Probar la imagen localmente
-
-Si tienes Docker instalado:
-
-```bash
-# 1. Construir la imagen
-docker build -t flask-ci-demo:dev .
-
-# 2. Ejecutar el contenedor
-docker run --rm -p 5000:5000 flask-ci-demo:dev
-```
-
-Luego abre en tu navegador:
-
-- **API Principal:** http://localhost:5000/
-- **Swagger UI:** http://localhost:5000/swagger/
-- **Productos:** http://localhost:5000/catalogos/productos
+- Reduce el tamaño de la imagen.
+- Acelera el build.
+- Evita subir archivos sensibles/innecesarios.
 
 ---
 
-## 📦 Publicación en GitHub Container Registry (GHCR)
+## ⚙️ Workflow de GitHub Actions
 
-Este proyecto publica automáticamente la imagen en:
+**Archivo:** `.github/workflows/build-and-push.yml`
 
-```
-ghcr.io/cpu-16/flask-ci-demo:main
-ghcr.io/cpu-16/flask-ci-demo:latest
-```
+### Disparadores
 
-![Paquete publicado en GHCR](docs/images/ghcr.png)
-
-### Configuración de permisos del token
-
-En **Settings → Actions → General → Workflow permissions** se habilitó:
-
-✅ **Read and write permissions**
-
-Esto permite que el token automático `GITHUB_TOKEN` tenga permiso para publicar en GHCR.
-
-### 🔽 Hacer pull de la imagen
-
-#### Si el paquete es público
-
-```bash
-docker pull ghcr.io/cpu-16/flask-ci-demo:latest
-docker run --rm -p 5000:5000 ghcr.io/cpu-16/flask-ci-demo:latest
-```
-![Ejecución del pull y run para probar la imagen](docs/images/pull.png)
-
-#### Si el paquete es privado
-
-Primero autentícate en GHCR con un token personal que tenga el scope `read:packages`:
-
-```bash
-echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
-docker pull ghcr.io/cpu-16/flask-ci-demo:latest
+```yaml
+on:
+  push:
+    branches:
+      - main
 ```
 
----
-
-## ⚙️ Pipeline de CI con GitHub Actions
-
-El workflow vive en: `.github/workflows/build-and-push.yml`
-
-### ¿Cuándo se ejecuta?
-
-- ✅ En cada `push` a la rama `main`
-- ✅ De forma manual desde la pestaña **Actions** (`workflow_dispatch`)
-
-![GitHub Actions ejecutándose correctamente](docs/images/actions.png)
+(Se puede extender con `workflow_dispatch` si quieres lanzarlo manualmente).
 
 ### Variables de entorno
-
-En la sección `env` del workflow se definen:
 
 ```yaml
 env:
@@ -261,20 +372,16 @@ env:
   IMAGE_NAME: ${{ github.repository }}  # owner/repo
 ```
 
-Esto permite reutilizar estos valores en los pasos siguientes.
-
 ### Permisos
-
-El job declara:
 
 ```yaml
 permissions:
-  contents: read      # Leer el código del repo
-  packages: write     # Publicar imágenes en GHCR
-  id-token: write     # Autenticación OIDC
+  contents: read
+  packages: write
+  id-token: write
 ```
 
-### 🔧 Pasos principales del workflow
+### Pasos principales
 
 #### 1️⃣ Checkout del código
 
@@ -283,7 +390,7 @@ permissions:
   uses: actions/checkout@v4
 ```
 
-#### 2️⃣ Login en GitHub Container Registry
+#### 2️⃣ Login en GHCR usando GITHUB_TOKEN
 
 ```yaml
 - name: Log in to GitHub Container Registry
@@ -294,10 +401,7 @@ permissions:
     password: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-- Usa el `GITHUB_TOKEN` que GitHub genera automáticamente
-- ✅ No es necesario un token personal para publicar en GHCR
-
-#### 3️⃣ Metadatos de la imagen (tags y labels)
+#### 3️⃣ Generar tags y labels
 
 ```yaml
 - name: Extract Docker metadata (tags, labels)
@@ -310,12 +414,7 @@ permissions:
       type=ref,event=branch
 ```
 
-Genera automáticamente:
-- Tag `latest`
-- Tag con el nombre de la rama (`main`)
-- Labels útiles (build date, commit SHA, etc.)
-
-#### 4️⃣ Build y push de la imagen
+#### 4️⃣ Build & push de la imagen
 
 ```yaml
 - name: Build and push Docker image
@@ -327,103 +426,86 @@ Genera automáticamente:
     labels: ${{ steps.meta.outputs.labels }}
 ```
 
-- Construye la imagen con el contexto del repo
-- Publica la imagen en GHCR con los tags generados
+---
+
+## 🔐 Buenas prácticas de seguridad usadas
+
+✅ **Sin credenciales en el código** (`app.py`, `Dockerfile`, etc.).
+
+✅ **Uso de GITHUB_TOKEN** con permisos mínimos para publicar en GHCR.
+
+✅ **.dockerignore** para evitar incluir:
+   - `venv/`
+   - `.git/`
+   - `.env`
+   - caches de Python.
+
+✅ **Posibilidad de añadir secrets adicionales** en:
+   - Settings → Secrets and variables → Actions.
 
 ---
 
-## 🔐 Buenas Prácticas de Seguridad Usadas
+## 🎥 Demo en video
 
-### ✅ No se guardan credenciales en el código
+![Demo en video](docs/images/demo.mp4)
 
-- Sin contraseñas en `Dockerfile`
-- Sin tokens hardcodeados en el código
+Video demostrando:
 
-### ✅ Autenticación segura con GITHUB_TOKEN
-
-El `GITHUB_TOKEN`:
-- 🔒 Es generado automáticamente por GitHub para cada ejecución
-- 🔒 Tiene permisos mínimos definidos por el workflow
-- �� Se revoca al finalizar la ejecución
-
-### ✅ .dockerignore bien configurado
-
-Los ficheros sensibles se excluyen del build:
-- `venv/` - Entornos virtuales
-- `.git/` - Historial de Git
-- `.env` - Variables de entorno
-- `__pycache__/` - Cache de Python
-
-### ✅ Secrets de GitHub para datos sensibles
-
-Si se necesitan claves adicionales (para Kubernetes, por ejemplo):
-
-1. Ve a **Settings → Secrets and variables → Actions**
-2. Añade un nuevo secret
-3. Refiérelo en el workflow como: `${{ secrets.NOMBRE_DEL_SECRET }}`
+- La ejecución de la API.
+- Swagger en acción.
+- El flujo de `docker pull` + `docker run`.
 
 ---
 
-## 🚀 Próximos Pasos (Roadmap)
+## 🚀 Próximos pasos (Roadmap)
 
-Algunas mejoras naturales sobre este laboratorio:
+Ideas para seguir extendiendo este laboratorio:
 
-### 1️⃣ Agregar tests automáticos
+### Tests automáticos
 
-- [ ] Crear un workflow `ci-tests.yml`
-- [ ] Ejecutar `pytest` antes de construir la imagen
-- [ ] Añadir coverage reports
+- Añadir `pytest` y un workflow de pruebas.
+- Bloquear el build si los tests fallan.
 
-```yaml
-# Ejemplo de paso de testing
-- name: Run tests
-  run: |
-    pip install pytest pytest-cov
-    pytest --cov=app tests/
-```
+### Despliegue a Kubernetes (k3s en Proxmox)
 
-### 2️⃣ Despliegue automático a Kubernetes (k3s)
+- Crear `k8s/deployment.yaml` y `k8s/service.yaml`.
+- Nuevo workflow `deploy-k3s.yml` que aplique los manifests.
 
-- [ ] Añadir manifests en `k8s/deployment.yaml` y `k8s/service.yaml`
-- [ ] Crear un segundo workflow para deployar
-- [ ] Usar `kubectl` para desplegar la imagen en un clúster k3s
+### Escaneo de seguridad
 
-### 3️⃣ Escaneo de seguridad
+- Integrar **CodeQL** para análisis estático.
+- Escanear imágenes Docker con **Trivy**.
+- Activar **Dependabot** para actualizar dependencias.
 
-- [ ] Integrar **CodeQL** para análisis de código
-- [ ] Añadir **Trivy** para escaneo de vulnerabilidades en contenedores
-- [ ] Configurar **Dependabot** para actualizar dependencias
+### Más documentación
 
-### 4️⃣ Documentación adicional
-
-- [ ] Añadir más capturas de pantalla en `docs/images/`
-- [ ] Crear un diagrama del flujo end-to-end
-- [ ] Documentar el proceso de desarrollo → GitHub → GHCR → Kubernetes
+- Más capturas en `docs/images/`.
+- Diagrama end-to-end: Dev → GitHub → GHCR → k3s.
 
 ---
 
 ## 🤝 Contribuir
 
-¿Mejoras o sugerencias? ¡Pull requests bienvenidos!
+1. Haz un fork del repo.
+2. Crea una rama nueva:
 
-1. Fork el proyecto
-2. Crea tu rama: `git checkout -b feature/nueva-funcionalidad`
-3. Commit: `git commit -m 'Añade nueva funcionalidad'`
-4. Push: `git push origin feature/nueva-funcionalidad`
-5. Abre un Pull Request
+```bash
+git checkout -b feature/nueva-funcionalidad
+```
 
----
-
-## 📄 Licencia
-
-Este proyecto es libre de usar para propósitos educativos y de laboratorio.
+3. Haz tus cambios y commits.
+4. Envía un Pull Request explicando qué mejoras aportas.
 
 ---
 
-## 🙏 Agradecimientos
+## 📄 Licencia y agradecimientos
 
-- [Flask Documentation](https://flask.palletsprojects.com/)
-- [Docker Documentation](https://docs.docker.com/)
+Este proyecto se utiliza con fines educativos y de laboratorio.
+
+**Gracias a:**
+
+- [Flask](https://flask.palletsprojects.com/)
+- [Docker](https://docs.docker.com/)
 - [GitHub Actions](https://docs.github.com/en/actions)
 - [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 
@@ -431,8 +513,6 @@ Este proyecto es libre de usar para propósitos educativos y de laboratorio.
 
 <div align="center">
 
-**⭐ Si este proyecto te ayuda a aprender CI/CD, dale una estrella! ⭐**
-
-Hecho con ❤️ para aprender DevOps y automatización
+**✳️ Flask + Docker + GHCR + GitHub Actions: un mini-laboratorio perfecto para practicar CI/CD y DevOps/SRE. ✳️**
 
 </div>
