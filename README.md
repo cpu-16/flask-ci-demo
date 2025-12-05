@@ -447,7 +447,7 @@ permissions:
 
 ## 🎥 Demo en video
 
-[👉 Ver demo en YouTube](https://youtu.be/iO2b945QVNk)
+[![Demo CI/CD](https://img.youtube.com/vi/iO2b945QVNk/maxresdefault.jpg)](https://youtu.be/iO2b945QVNk)
 
 Video demostrando:
 
