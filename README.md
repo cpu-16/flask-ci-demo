@@ -447,7 +447,7 @@ permissions:
 
 ## 🎥 Demo en video
 
-![Demo en video](docs/images/demo.mp4)
+[👉 Ver demo en YouTube](https://youtu.be/iO2b945QVNk)
 
 Video demostrando:
 
